@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wild West Pro Slot</title>
+
+<style>
+body{
+margin:0;
+background:radial-gradient(circle at top,#5a2b12,#140904);
+font-family:Arial;
+text-align:center;
+color:white;
+overflow:hidden;
+}
+
+h1{
+color:gold;
+text-shadow:0 0 20px gold;
+margin:10px;
+}
+
+.slot-box{
+width:420px;
+margin:auto;
+padding:15px;
+border-radius:20px;
+background:linear-gradient(#3b1f0f,#140904);
+box-shadow:0 0 40px gold;
+position:relative;
+}
+
+canvas{
+background:#1a0c05;
+border-radius:15px;
+border:3px solid gold;
+}
+
+button{
+padding:10px 25px;
+margin:6px;
+border:none;
+border-radius:10px;
+background:linear-gradient(gold,orange);
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 0 15px gold;
+}
+
+.bigwin{
+position:absolute;
+top:40%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:50px;
+color:gold;
+display:none;
+text-shadow:0 0 30px gold;
+pointer-events:none;
+}
+</style>
+</head>
+<body>
+
+<h1>🎰 WILD WEST PRO</h1>
+
+<div class="slot-box">
+<canvas id="slot" width="400" height="300"></canvas>
+
+<h3>💰 Balance: <span id="balance">1000</span></h3>
+<h3>🎁 Free Spins: <span id="free">0</span></h3>
+<h3>💎 Jackpot: <span id="jackpot">5000</span></h3>
+
+<button onclick="spin()">SPIN</button>
+<button onclick="toggleVol()">VOLATILITY</button>
+</div>
+
+<div id="bigwin" class="bigwin"></div>
+
+<script>
+const canvas=document.getElementById("slot");
+const ctx=canvas.getContext("2d");
+
+const rows=3, cols=5;
+const size=80;
+
+let balance=1000;
+let bet=10;
+let freeSpins=0;
+let jackpot=5000;
+let volatility="low";
+let spinning=false;
+let reels=[];
+let highlightLines=[];
+let particles=[];
+
+const symbols=["A","K","Q","J","🔫","🍾","🤠","⭐"];
+const wild="🤠";
+const scatter="⭐";
+
+const reelLow=["A","K","Q","J","A","Q","K","J","🔫","🍾","A","K","⭐","Q","🤠"];
+const reelHigh=["A","K","Q","J","🔫","🍾","⭐","🤠"];
+
+const paylines=[
+[0,0,0,0,0],[1,1,1,1,1],[2,2,2,2,2],
+[0,1,2,1,0],[2,1,0,1,2],
+[0,0,1,0,0],[2,2,1,2,2],
+[1,0,0,0,1],[1,2,2,2,1],
+[0,1,1,1,0],[2,1,1,1,2],
+[1,0,1,0,1],[1,2,1,2,1],
+[0,2,0,2,0],[2,0,2,0,2],
+[0,1,0,1,0],[2,1,2,1,2],
+[1,0,2,0,1],[1,2,0,2,1],
+[0,2,1,2,0]
+];
+
+function generateSpin(){
+reels=[];
+let strip=volatility==="low"?reelLow:reelHigh;
+
+for(let c=0;c<cols;c++){
+let stop=Math.floor(Math.random()*strip.length);
+reels[c]=[];
+for(let r=0;r<rows;r++){
+reels[c][r]=strip[(stop+r)%strip.length];
+}
+}
+}
+
+function draw(){
+ctx.clearRect(0,0,400,300);
+
+for(let c=0;c<cols;c++){
+for(let r=0;r<rows;r++){
+ctx.strokeStyle="gold";
+ctx.strokeRect(c*size,r*size,size,size);
+
+ctx.font="40px Arial";
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+
+let sym=reels[c][r];
+
+if(sym===wild) ctx.fillStyle="orange";
+else if(sym===scatter) ctx.fillStyle="cyan";
+else ctx.fillStyle="white";
+
+ctx.fillText(sym,c*size+size/2,r*size+size/2);
+}
+}
+
+highlightLines.forEach(line=>{
+ctx.strokeStyle="lime";
+ctx.lineWidth=4;
+ctx.beginPath();
+for(let c=0;c<cols;c++){
+let r=paylines[line][c];
+let x=c*size+size/2;
+let y=r*size+size/2;
+if(c===0) ctx.moveTo(x,y);
+else ctx.lineTo(x,y);
+}
+ctx.stroke();
+});
+}
+
+function spin(){
+if(spinning) return;
+if(balance<bet && freeSpins<=0) return alert("Hết tiền");
+
+spinning=true;
+highlightLines=[];
+
+if(freeSpins<=0) balance-=bet;
+else freeSpins--;
+
+updateUI();
+
+let duration=1200;
+let start=Date.now();
+
+function animate(){
+if(Date.now()-start<duration){
+generateSpin();
+draw();
+requestAnimationFrame(animate);
+}else{
+generateSpin();
+checkWin();
+spinning=false;
+}
+}
+animate();
+playSound(300);
+}
+
+function checkWin(){
+let totalWin=0;
+let multiplier=freeSpins>0?2:1;
+
+paylines.forEach((line,index)=>{
+let first=reels[0][line[0]];
+if(first===scatter) return;
+
+let match=true;
+
+for(let c=1;c<cols;c++){
+let sym=reels[c][line[c]];
+if(sym!==first && sym!==wild){
+match=false;
+break;
+}
+}
+
+if(match){
+highlightLines.push(index);
+totalWin+=bet*10*multiplier;
+}
+});
+
+let scatterCount=0;
+for(let c=0;c<cols;c++)
+for(let r=0;r<rows;r++)
+if(reels[c][r]===scatter) scatterCount++;
+
+if(scatterCount>=3){
+freeSpins+=10;
+}
+
+if(totalWin>0){
+balance+=totalWin;
+if(totalWin>bet*20){
+bigWin(totalWin);
+createParticles();
+}else{
+playSound(600);
+}
+}
+
+jackpot+=bet*0.2;
+updateUI();
+draw();
+}
+
+function bigWin(amount){
+let el=document.getElementById("bigwin");
+el.style.display="block";
+let current=0;
+
+let interval=setInterval(()=>{
+current+=Math.ceil(amount/30);
+el.innerText="💰 "+current;
+if(current>=amount){
+clearInterval(interval);
+setTimeout(()=>el.style.display="none",2000);
+}
+},30);
+}
+
+function createParticles(){
+for(let i=0;i<100;i++){
+particles.push({
+x:200,
+y:150,
+dx:(Math.random()-0.5)*8,
+dy:(Math.random()-0.5)*8,
+life:60
+});
+}
+}
+
+function updateParticles(){
+particles.forEach(p=>{
+p.x+=p.dx;
+p.y+=p.dy;
+p.life--;
+});
+particles=particles.filter(p=>p.life>0);
+}
+
+function drawParticles(){
+particles.forEach(p=>{
+ctx.fillStyle="gold";
+ctx.beginPath();
+ctx.arc(p.x,p.y,3,0,Math.PI*2);
+ctx.fill();
+});
+}
+
+function loop(){
+updateParticles();
+draw();
+drawParticles();
+requestAnimationFrame(loop);
+}
+loop();
+
+function updateUI(){
+document.getElementById("balance").innerText=balance;
+document.getElementById("free").innerText=freeSpins;
+document.getElementById("jackpot").innerText=Math.floor(jackpot);
+}
+
+function toggleVol(){
+volatility=volatility==="low"?"high":"low";
+alert("Volatility: "+volatility);
+}
+
+function playSound(freq){
+let ctxAudio=new (window.AudioContext||window.webkitAudioContext)();
+let osc=ctxAudio.createOscillator();
+osc.type="square";
+osc.frequency.value=freq;
+osc.connect(ctxAudio.destination);
+osc.start();
+osc.stop(ctxAudio.currentTime+0.1);
+}
+
+generateSpin();
+draw();
+</script>
+
+</body>
+</html>
