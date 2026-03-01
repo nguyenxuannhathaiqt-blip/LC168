@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LC168 MAX SLOT</title>
+
+<style>
+body{
+    margin:0;
+    background:#0f172a;
+    font-family:Arial;
+    color:white;
+    text-align:center;
+}
+
+h1{
+    margin:15px;
+    color:gold;
+}
+
+#game{
+    display:grid;
+    grid-template-columns:repeat(6,70px);
+    grid-gap:5px;
+    justify-content:center;
+    margin:20px auto;
+}
+
+.cell{
+    width:70px;
+    height:70px;
+    background:#1e293b;
+    border-radius:10px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:30px;
+    transition:0.2s;
+}
+
+.win{
+    background:gold;
+    color:black;
+    transform:scale(1.1);
+}
+
+.controls{
+    margin-top:20px;
+}
+
+button{
+    padding:10px 15px;
+    font-size:16px;
+    margin:5px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.spin{
+    background:gold;
+    color:black;
+}
+
+.bet{
+    background:#334155;
+    color:white;
+}
+
+.info{
+    margin-top:10px;
+    font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>LC168 - MAX LEVEL</h1>
+
+<div id="game"></div>
+
+<div class="controls">
+    <button class="bet" onclick="decreaseBet()">-</button>
+    <button class="bet" onclick="increaseBet()">+</button>
+    <button class="spin" onclick="spin()">SPIN</button>
+</div>
+
+<div class="info">
+    💰 Số dư: <span id="balance">500.00</span><br>
+    🎯 Cược: <span id="bet">0.40</span>
+</div>
+
+<script>
+const symbols = ["💰","🦹","🚔","⭐","🔥","J","Q","K","A"];
+const grid = document.getElementById("game");
+const balanceEl = document.getElementById("balance");
+const betEl = document.getElementById("bet");
+
+let balance = 500;
+let bet = 0.4;
+
+function createGrid(){
+    grid.innerHTML="";
+    for(let i=0;i<36;i++){
+        let div=document.createElement("div");
+        div.classList.add("cell");
+        div.textContent="❓";
+        grid.appendChild(div);
+    }
+}
+
+function increaseBet(){
+    bet+=0.4;
+    betEl.textContent=bet.toFixed(2);
+}
+
+function decreaseBet(){
+    if(bet>0.4){
+        bet-=0.4;
+        betEl.textContent=bet.toFixed(2);
+    }
+}
+
+function spin(){
+    if(balance<bet){
+        alert("Hết tiền rồi bro 😢");
+        return;
+    }
+
+    balance-=bet;
+    balanceEl.textContent=balance.toFixed(2);
+
+    const cells=document.querySelectorAll(".cell");
+    cells.forEach(cell=>{
+        cell.classList.remove("win");
+        cell.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+    });
+
+    checkWin();
+}
+
+function checkWin(){
+    const cells=document.querySelectorAll(".cell");
+    let map={};
+    cells.forEach(cell=>{
+        let s=cell.textContent;
+        map[s]=(map[s]||0)+1;
+    });
+
+    for(let key in map){
+        if(map[key]>=6){
+            let winAmount=bet*5;
+            balance+=winAmount;
+            balanceEl.textContent=balance.toFixed(2);
+
+            cells.forEach(cell=>{
+                if(cell.textContent===key){
+                    cell.classList.add("win");
+                }
+            });
+        }
+    }
+}
+
+createGrid();
+</script>
+
+</body>
+</html>
