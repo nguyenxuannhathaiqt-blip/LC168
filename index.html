@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wild West Advanced Slot</title>
+
+<style>
+body{
+    margin:0;
+    background:linear-gradient(#4b1f0f,#140904);
+    font-family:Arial;
+    color:white;
+    text-align:center;
+    overflow-x:hidden;
+}
+
+h1{
+    color:gold;
+    margin:10px;
+}
+
+#slot-wrapper{
+    width:100%;
+    max-width:450px;
+    margin:auto;
+    overflow:hidden;
+    border:3px solid gold;
+    border-radius:15px;
+    background:#2b1508;
+}
+
+#reels{
+    display:flex;
+}
+
+.reel{
+    width:20%;
+    height:300px;
+    overflow:hidden;
+    border-right:1px solid #7a4c1e;
+    position:relative;
+}
+
+.symbol{
+    height:100px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:32px;
+    border-bottom:1px solid #3a1f0f;
+}
+
+.win{
+    background:gold;
+    color:black;
+    animation:blink 0.4s infinite alternate;
+}
+
+@keyframes blink{
+    from{opacity:1}
+    to{opacity:0.5}
+}
+
+.panel{
+    margin-top:10px;
+}
+
+button{
+    padding:8px 18px;
+    margin:5px;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.spin{background:gold;}
+.auto{background:orange;}
+.turbo{background:red;color:white;}
+
+</style>
+</head>
+<body>
+
+<h1>🤠 Wild West Showdown</h1>
+
+<div id="slot-wrapper">
+    <div id="reels"></div>
+</div>
+
+<div class="panel">
+💰 Balance: <span id="balance">1000</span> |
+🎯 Bet: <span id="bet">10</span> |
+🎁 Free: <span id="free">0</span>
+</div>
+
+<div>
+<button class="spin" onclick="spin()">SPIN</button>
+<button class="auto" onclick="toggleAuto()">AUTO</button>
+<button class="turbo" onclick="toggleTurbo()">TURBO</button>
+</div>
+
+<script>
+const rows=3, cols=5;
+const symbols=["🤠","🔫","🍾","A","K","Q","J","⭐"];
+const paytable={"🤠":25,"🔫":18,"🍾":15,"A":12,"K":10,"Q":8,"J":6};
+let balance=1000;
+let bet=10;
+let freeSpins=0;
+let auto=false;
+let turbo=false;
+
+const reelsDiv=document.getElementById("reels");
+
+function createReels(){
+    reelsDiv.innerHTML="";
+    for(let c=0;c<cols;c++){
+        let reel=document.createElement("div");
+        reel.className="reel";
+        for(let i=0;i<20;i++){
+            let sym=document.createElement("div");
+            sym.className="symbol";
+            sym.innerText=symbols[Math.floor(Math.random()*symbols.length)];
+            reel.appendChild(sym);
+        }
+        reelsDiv.appendChild(reel);
+    }
+}
+
+function randomSymbol(){
+    let r=Math.random();
+    if(r<0.05) return "🤠";
+    if(r<0.10) return "⭐";
+    return symbols[Math.floor(Math.random()*6)+1];
+}
+
+function spin(){
+    if(balance<bet && freeSpins<=0) return alert("Hết tiền!");
+
+    if(freeSpins<=0) balance-=bet;
+    else freeSpins--;
+
+    updateUI();
+
+    let reels=document.querySelectorAll(".reel");
+    let result=[];
+
+    reels.forEach((reel,index)=>{
+        let speed=turbo?1000:2000;
+        reel.style.transition="transform "+speed+"ms ease-out";
+        reel.style.transform="translateY(-1000px)";
+
+        setTimeout(()=>{
+            reel.style.transition="none";
+            reel.style.transform="translateY(0px)";
+            reel.innerHTML="";
+            for(let r=0;r<rows;r++){
+                let sym=randomSymbol();
+                result.push(sym);
+                let div=document.createElement("div");
+                div.className="symbol";
+                div.innerText=sym;
+                reel.appendChild(div);
+            }
+            if(index===cols-1){
+                setTimeout(()=>checkWin(result),200);
+            }
+        },speed);
+    });
+}
+
+function checkWin(result){
+    let totalWin=0;
+    let multiplier=freeSpins>0 ? 2 : 1;
+
+    for(let r=0;r<rows;r++){
+        let line=result.slice(r*cols,r*cols+cols);
+        let base=line[0];
+        if(base==="⭐") continue;
+        if(line.every(v=>v===base||v==="🤠")){
+            let win=bet*paytable[base]*multiplier;
+            totalWin+=win;
+            highlight(r);
+        }
+    }
+
+    let scatters=result.filter(v=>v==="⭐").length;
+    if(scatters>=3){
+        freeSpins+=10;
+        alert("🎁 10 Free Spins!");
+    }
+
+    if(totalWin>0){
+        balance+=totalWin;
+        setTimeout(()=>alert("🔥 Win "+totalWin),300);
+    }
+
+    updateUI();
+
+    if(auto) setTimeout(spin,500);
+}
+
+function highlight(row){
+    let reels=document.querySelectorAll(".reel");
+    reels.forEach(reel=>{
+        reel.children[row].classList.add("win");
+    });
+}
+
+function updateUI(){
+    document.getElementById("balance").innerText=balance;
+    document.getElementById("free").innerText=freeSpins;
+}
+
+function toggleAuto(){
+    auto=!auto;
+    if(auto) spin();
+}
+
+function toggleTurbo(){
+    turbo=!turbo;
+}
+
+createReels();
+</script>
+
+</body>
+</html>
