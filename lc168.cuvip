@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Quay Hũ Casino</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background: radial-gradient(circle at center, #3a0066, #000);
+    color:white;
+    text-align:center;
+}
+
+h1{
+    color: gold;
+    text-shadow:0 0 15px gold;
+}
+
+.container{
+    margin-top:20px;
+}
+
+.balance, .jackpot{
+    font-size:20px;
+    margin:10px;
+}
+
+.jackpot{
+    color: #ff00ff;
+    font-weight:bold;
+    text-shadow:0 0 10px #ff00ff;
+}
+
+.slot{
+    display:flex;
+    justify-content:center;
+    margin:20px;
+}
+
+.reel{
+    width:80px;
+    height:80px;
+    background:#111;
+    border:3px solid gold;
+    border-radius:10px;
+    margin:5px;
+    font-size:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 0 15px gold inset;
+}
+
+button{
+    padding:12px 30px;
+    font-size:18px;
+    background:linear-gradient(45deg, gold, orange);
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+.history{
+    margin-top:20px;
+    font-size:14px;
+    max-height:120px;
+    overflow:auto;
+}
+
+.win{
+    animation:flash 0.5s infinite alternate;
+}
+
+@keyframes flash{
+    from{box-shadow:0 0 10px gold;}
+    to{box-shadow:0 0 30px red;}
+}
+
+@keyframes shake{
+    0%{transform:translateX(0);}
+    25%{transform:translateX(-5px);}
+    50%{transform:translateX(5px);}
+    75%{transform:translateX(-5px);}
+    100%{transform:translateX(0);}
+}
+
+.shake{
+    animation:shake 0.3s;
+}
+
+@media(max-width:600px){
+    .reel{
+        width:60px;
+        height:60px;
+        font-size:30px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎰 GAME QUAY HŨ 🎰</h1>
+
+<div class="container">
+    <div class="balance">Số dư: <span id="balance">10000</span> 💰</div>
+    <div class="jackpot">Jackpot: <span id="jackpot">50000</span> 🏆</div>
+
+    <div class="slot">
+        <div class="reel" id="r1">❓</div>
+        <div class="reel" id="r2">❓</div>
+        <div class="reel" id="r3">❓</div>
+    </div>
+
+    <button onclick="spin()">QUAY (100)</button>
+
+    <div class="history">
+        <h3>Lịch sử:</h3>
+        <div id="log"></div>
+    </div>
+</div>
+
+<audio id="spinSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+<audio id="winSound" src="https://www.soundjay.com/button/sounds/button-3.mp3"></audio>
+
+<script>
+let symbols = ["🍒","🔔","💎","7️⃣","⭐"];
+let balance = localStorage.getItem("balance") ? parseInt(localStorage.getItem("balance")) : 10000;
+let jackpot = 50000;
+
+document.getElementById("balance").innerText = balance;
+
+function spin(){
+    if(balance < 100){
+        alert("Hết tiền rồi!");
+        return;
+    }
+
+    balance -= 100;
+    jackpot += 50;
+    updateDisplay();
+
+    document.getElementById("spinSound").play();
+
+    let r1 = randomSymbol();
+    let r2 = randomSymbol();
+    let r3 = randomSymbol();
+
+    setTimeout(()=>{
+        document.getElementById("r1").innerText = r1;
+        document.getElementById("r2").innerText = r2;
+        document.getElementById("r3").innerText = r3;
+
+        checkWin(r1,r2,r3);
+    },500);
+}
+
+function randomSymbol(){
+    return symbols[Math.floor(Math.random()*symbols.length)];
+}
+
+function checkWin(a,b,c){
+    let winAmount = 0;
+
+    if(a===b && b===c){
+        if(a==="💎"){
+            winAmount = jackpot;
+            jackpot = 50000;
+            document.body.classList.add("shake");
+        }else{
+            winAmount = 1000;
+        }
+
+        balance += winAmount;
+        document.getElementById("winSound").play();
+        flashReels();
+        log("🎉 Trúng " + winAmount + " 💰");
+    }else{
+        log("❌ Không trúng");
+    }
+
+    updateDisplay();
+}
+
+function updateDisplay(){
+    document.getElementById("balance").innerText = balance;
+    document.getElementById("jackpot").innerText = jackpot;
+    localStorage.setItem("balance", balance);
+}
+
+function flashReels(){
+    let reels = document.querySelectorAll(".reel");
+    reels.forEach(r=>{
+        r.classList.add("win");
+        setTimeout(()=>r.classList.remove("win"),1000);
+    });
+}
+
+function log(text){
+    let logDiv = document.getElementById("log");
+    logDiv.innerHTML = text + "<br>" + logDiv.innerHTML;
+}
+</script>
+
+</body>
+</html>
