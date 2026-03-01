@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casino Slot 95%</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:radial-gradient(circle at top,#5a2b12,#140904);
+overflow:hidden;
+color:white;
+text-align:center;
+}
+
+h1{
+color:gold;
+text-shadow:0 0 25px gold;
+}
+
+.slot-container{
+width:420px;
+margin:10px auto;
+padding:20px;
+border-radius:20px;
+background:rgba(0,0,0,0.6);
+box-shadow:0 0 40px gold;
+}
+
+.reels{
+display:flex;
+overflow:hidden;
+height:300px;
+border:3px solid gold;
+border-radius:15px;
+}
+
+.reel{
+flex:1;
+position:relative;
+}
+
+.symbol{
+height:100px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:38px;
+border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.spin-btn{
+padding:12px 30px;
+margin-top:10px;
+font-size:18px;
+border:none;
+border-radius:12px;
+background:linear-gradient(gold,orange);
+box-shadow:0 0 20px gold;
+cursor:pointer;
+}
+
+.bigwin{
+position:absolute;
+top:40%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:50px;
+color:gold;
+display:none;
+text-shadow:0 0 30px gold;
+animation:pop 0.5s infinite alternate;
+}
+
+@keyframes pop{
+from{transform:translate(-50%,-50%) scale(1)}
+to{transform:translate(-50%,-50%) scale(1.2)}
+}
+</style>
+</head>
+<body>
+
+<h1>🎰 WILD WEST CASINO</h1>
+
+<div class="slot-container">
+<div class="reels" id="reels"></div>
+<h3>💰 Balance: <span id="balance">1000</span></h3>
+<h3>🎁 Free Spins: <span id="free">0</span></h3>
+<button class="spin-btn" onclick="spin()">SPIN</button>
+</div>
+
+<div id="bigwin" class="bigwin"></div>
+
+<script>
+const symbols=["🤠","🔫","🍾","A","K","Q","J","⭐"];
+const paytable={A:8,K:10,Q:12,J:14,"🔫":20,"🍾":25,"🤠":40};
+
+const rows=3, cols=5;
+let balance=1000;
+let bet=10;
+let freeSpins=0;
+let jackpot=5000;
+let spinning=false;
+
+const reelsDiv=document.getElementById("reels");
+
+function init(){
+for(let i=0;i<cols;i++){
+let reel=document.createElement("div");
+reel.className="reel";
+for(let j=0;j<20;j++){
+let sym=document.createElement("div");
+sym.className="symbol";
+sym.innerText=symbols[Math.floor(Math.random()*symbols.length)];
+reel.appendChild(sym);
+}
+reelsDiv.appendChild(reel);
+}
+}
+init();
+
+function randomSymbol(){
+let r=Math.random();
+if(r<0.05) return "🤠";
+if(r<0.1) return "⭐";
+return symbols[Math.floor(Math.random()*6)+1];
+}
+
+function spin(){
+if(spinning) return;
+if(balance<bet && freeSpins<=0) return alert("Hết tiền");
+
+spinning=true;
+
+if(freeSpins<=0) balance-=bet;
+else freeSpins--;
+
+updateUI();
+
+let reels=document.querySelectorAll(".reel");
+let result=[];
+
+reels.forEach((reel,index)=>{
+reel.style.transition="transform 1s ease-out";
+reel.style.transform="translateY(-1000px)";
+
+setTimeout(()=>{
+reel.style.transition="none";
+reel.style.transform="translateY(0)";
+reel.innerHTML="";
+for(let r=0;r<rows;r++){
+let sym=randomSymbol();
+result.push(sym);
+let div=document.createElement("div");
+div.className="symbol";
+div.innerText=sym;
+reel.appendChild(div);
+}
+if(index===cols-1){
+setTimeout(()=>checkWin(result),200);
+spinning=false;
+}
+},1000);
+});
+}
+
+function checkWin(result){
+let totalWin=0;
+let multiplier=freeSpins>0?2:1;
+
+for(let r=0;r<rows;r++){
+let base=result[r*cols];
+if(base==="⭐") continue;
+let win=true;
+for(let c=1;c<cols;c++){
+let sym=result[c*rows+r];
+if(sym!==base && sym!=="🤠"){ win=false; break; }
+}
+if(win){
+totalWin+=bet*paytable[base]*multiplier;
+}
+}
+
+let scatter=result.filter(v=>v==="⭐").length;
+if(scatter>=3){
+freeSpins+=10;
+showMessage("🎁 10 FREE SPINS!");
+}
+
+if(totalWin>0){
+balance+=totalWin;
+if(totalWin>bet*30){
+showBigWin("💰 BIG WIN "+totalWin);
+createParticles();
+}else{
+showMessage("🔥 WIN "+totalWin);
+}
+}
+
+jackpot+=bet*0.1;
+updateUI();
+}
+
+function showBigWin(msg){
+let el=document.getElementById("bigwin");
+el.innerText=msg;
+el.style.display="block";
+setTimeout(()=>el.style.display="none",2000);
+}
+
+function showMessage(msg){
+showBigWin(msg);
+}
+
+function updateUI(){
+document.getElementById("balance").innerText=balance;
+document.getElementById("free").innerText=freeSpins;
+}
+
+function createParticles(){
+for(let i=0;i<100;i++){
+let p=document.createElement("div");
+p.style.position="absolute";
+p.style.left="50%";
+p.style.top="50%";
+p.style.width="5px";
+p.style.height="5px";
+p.style.background="gold";
+p.style.borderRadius="50%";
+p.style.pointerEvents="none";
+document.body.appendChild(p);
+
+let dx=(Math.random()-0.5)*400;
+let dy=(Math.random()-0.5)*400;
+
+p.animate([
+{transform:"translate(0,0)",opacity:1},
+{transform:\`translate(\${dx}px,\${dy}px)\`,opacity:0}
+],{duration:1000});
+
+setTimeout(()=>p.remove(),1000);
+}
+}
+</script>
+
+</body>
+</html>
